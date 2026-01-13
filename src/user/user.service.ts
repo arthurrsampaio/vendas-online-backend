@@ -7,53 +7,59 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class UserService {
-    constructor(
-        @InjectRepository(UserEntity)
-        private readonly userRepository: Repository<UserEntity>
-    ) {}
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
 
-    async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
-        const saltOrRounds = 10;
+  async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
+    const saltOrRounds = 10;
 
-        const passwordHash = await hash(createUserDto.password, saltOrRounds);
+    const passwordHash = await hash(createUserDto.password, saltOrRounds);
 
-        return this.userRepository.save({
-            ...createUserDto,
-            typeUser: 1,
-            password: passwordHash
-        });
+    return this.userRepository.save({
+      ...createUserDto,
+      typeUser: 1,
+      password: passwordHash,
+    });
+  }
+
+  async getUserByIdUsingRelations(userId: number): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: {
+        addresses: {
+          city: {
+            state: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`UserId: ${userId} not found`);
     }
 
-    async getUserByIdUsingRelations(userId: number): Promise<UserEntity> {
-        const user = await this.userRepository.findOne({
-            where: {
-                id: userId,
-            },
-            relations: ['addresses']
-        })
+    return user;
+  }
 
-        if (!user) {
-            throw new NotFoundException(`UserId: ${userId} not found`);
-        }
-        
-        return user;
+  async getAllUsers(): Promise<UserEntity[]> {
+    return this.userRepository.find();
+  }
+
+  async findUserByID(userId: number): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`UserId: ${userId} not found`);
     }
 
-    async getAllUsers(): Promise<UserEntity[]> {
-        return this.userRepository.find();
-    }
-
-    async findUserByID(userId: number): Promise<UserEntity> {
-        const user = await this.userRepository.findOne({
-            where: {
-                id: userId,
-            }
-        });
-
-        if (!user) {
-            throw new NotFoundException(`UserId: ${userId} not found`);
-        }
-
-        return user;
-    }
+    return user;
+  }
 }
