@@ -12,8 +12,10 @@ import { CreateUserDto } from './dtos/createUser.dto';
 import { UserService } from './user.service';
 import { UserEntity } from './entities/user.entity';
 import { ReturnUserDto } from './dtos/returnUser.dto';
-import { UpdateUserDTO } from './dtos/update-user.dto';
-import { UserId } from 'src/decorators/user-id.decorator';
+import { UpdatePasswordDto } from './dtos/update-password.dto';
+import { UserId } from '../decorators/user-id.decorator';
+import { Roles } from 'src/decorators/roles.decorator';
+import { UserType } from './enum/user-type.enum';
 
 @Controller('user')
 export class UserController {
@@ -25,6 +27,7 @@ export class UserController {
     return this.userService.createUser(createUser);
   }
 
+  @Roles(UserType.Admin)
   @Get()
   async getAllUsers(): Promise<ReturnUserDto[]> {
     return (await this.userService.getAllUsers()).map(
@@ -32,6 +35,7 @@ export class UserController {
     );
   }
 
+  @Roles(UserType.Admin)
   @Get('/:userId')
   async getUserById(@Param('userId') userId: number): Promise<ReturnUserDto> {
     return new ReturnUserDto(
@@ -39,12 +43,13 @@ export class UserController {
     );
   }
 
+  @Roles(UserType.Admin, UserType.User)
   @Patch()
   @UsePipes(ValidationPipe)
   async updatePassword(
-    @Body() updateUserDTO: UpdateUserDTO,
+    @Body() updatePasswordDto: UpdatePasswordDto,
     @UserId() userId: number,
   ): Promise<UserEntity> {
-    return this.userService.updatePassword(updateUserDTO, userId);
+    return this.userService.updatePassword(updatePasswordDto, userId);
   }
 }
