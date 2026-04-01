@@ -5,10 +5,11 @@ import {
 } from '@nestjs/common';
 import { UserEntity } from './entities/user.entity';
 import { CreateUserDto } from './dtos/createUser.dto';
-import { hash } from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserType } from './enum/user-type.enum';
+import { UpdateUserDTO } from './dtos/update-user.dto';
+import { createPasswordHash, validatePassword } from 'src/utils/password';
 
 @Injectable()
 export class UserService {
@@ -28,7 +29,7 @@ export class UserService {
 
     const saltOrRounds = 10;
 
-    const passwordHash = await hash(createUserDto.password, saltOrRounds);
+    const passwordHash = await createPasswordHash(createUserDto.password);
 
     return this.userRepository.save({
       ...createUserDto,
@@ -88,5 +89,28 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async updatePassword(
+    updateUserDTO: UpdateUserDTO,
+    userId: number,
+  ): Promise<UserEntity> {
+    const user = await this.findUserByID(userId);
+
+    const isMatch = await validatePassword(
+      updateUserDTO.lastPassword,
+      user.password || '',
+    );
+
+    if (!user || !isMatch) {
+      throw new BadRequestException('Invalid password');
+    }
+
+    const newPasswordHash = await createPasswordHash(updateUserDTO.newPassword);
+
+    return this.userRepository.save({
+      ...user,
+      password: newPasswordHash,
+    });
   }
 }
