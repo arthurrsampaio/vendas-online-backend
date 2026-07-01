@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { InsertCartDto } from '../cart/dtos/insert-cart.dto';
 import { CartEntity } from '../cart/entities/cart.entity';
 import { ProductService } from '../product/product.service';
+import { DeleteResult } from 'typeorm/browser';
+import { UpdateCartDto } from '../cart/dtos/update-cart.dto';
 
 @Injectable()
 export class CartProductService {
@@ -14,7 +16,7 @@ export class CartProductService {
     private readonly productService: ProductService,
   ) {}
 
-  async verifyProduct(
+  async verifyProductInCart(
     productId: number,
     cartId: number,
   ): Promise<CartProductEntity> {
@@ -49,7 +51,7 @@ export class CartProductService {
   ): Promise<CartProductEntity> {
     await this.productService.findProductById(insertCartDto.productId);
 
-    const cartProduct = await this.verifyProduct(
+    const cartProduct = await this.verifyProductInCart(
       insertCartDto.productId,
       cart.id,
     ).catch(() => undefined);
@@ -62,5 +64,29 @@ export class CartProductService {
       ...cartProduct,
       amount: cartProduct.amount + insertCartDto.amount,
     });
+  }
+
+  async updateProductInCart(
+    updateCartDto: UpdateCartDto,
+    cart: CartEntity,
+  ): Promise<CartProductEntity> {
+    await this.productService.findProductById(updateCartDto.productId);
+
+    const cartProduct = await this.verifyProductInCart(
+      updateCartDto.productId,
+      cart.id,
+    );
+
+    return this.cartProductRepository.save({
+      ...cartProduct,
+      amount: updateCartDto.amount,
+    });
+  }
+
+  async deleteProductCart(
+    productId: number,
+    cartId: number,
+  ): Promise<DeleteResult> {
+    return this.cartProductRepository.delete({ productId, cartId });
   }
 }
