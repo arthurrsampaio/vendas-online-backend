@@ -83,7 +83,7 @@ export class CartProductService {
     });
   }
 
-  async deleteProductCart(
+  async deleteProductInCart(
     productId: number,
     cartId: number,
   ): Promise<DeleteResult> {
