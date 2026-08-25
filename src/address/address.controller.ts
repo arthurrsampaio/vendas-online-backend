@@ -15,7 +15,7 @@ import { UserType } from '../user/enum/user-type.enum';
 import { UserId } from '../decorators/user-id.decorator';
 import { ReturnAddressDto } from './dtos/returnAddress.dto';
 
-@Roles(UserType.User)
+@Roles(UserType.User, UserType.Admin)
 @Controller('address')
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
