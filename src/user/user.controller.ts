@@ -28,7 +28,7 @@ export class UserController {
   }
 
   @Roles(UserType.Admin)
-  @Get()
+  @Get('/all')
   async getAllUsers(): Promise<ReturnUserDto[]> {
     return (await this.userService.getAllUsers()).map(
       (UserEntity) => new ReturnUserDto(UserEntity),
@@ -51,5 +51,13 @@ export class UserController {
     @UserId() userId: number,
   ): Promise<UserEntity> {
     return this.userService.updatePassword(updatePasswordDto, userId);
+  }
+
+  @Roles(UserType.Admin, UserType.User)
+  @Get()
+  async getInfoUser(@UserId() userId: number): Promise<ReturnUserDto> {
+    return new ReturnUserDto(
+      await this.userService.getUserByIdUsingRelations(userId),
+    );
   }
 }
