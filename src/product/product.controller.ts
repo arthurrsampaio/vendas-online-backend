@@ -25,7 +25,7 @@ export class ProductController {
 
   @Get()
   async getAllProducts(): Promise<ReturnProduct[]> {
-    return (await this.productService.getAllProducts()).map(
+    return (await this.productService.getAllProducts([], true)).map(
       (product) => new ReturnProduct(product),
     );
   }
